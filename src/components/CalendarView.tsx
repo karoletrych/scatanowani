@@ -172,6 +172,7 @@ export function CalendarView({
   onWholeDay,
   onClearDay,
   onOpenRules,
+  onFillUnknown,
   myProgress,
 }: {
   room: RoomData;
@@ -181,12 +182,14 @@ export function CalendarView({
   onWholeDay: (date: string, verdict: Verdict) => void;
   onClearDay: (date: string) => void;
   onOpenRules: () => void;
+  onFillUnknown: (verdict: Verdict) => void;
   myProgress: { answered: number; total: number; percent: number };
 }) {
   const participants = Object.keys(room.participants).length;
   const first = dates[0];
   const last = dates[dates.length - 1];
   const rulesCount = myAnswers.rules.length;
+  const unknownCount = Math.max(0, myProgress.total - myProgress.answered);
 
   return (
     <section className="view">
@@ -244,6 +247,42 @@ export function CalendarView({
           {peopleLabel(participants)} w grupie
         </div>
       </div>
+
+      {myProgress.total > 0 ? (
+        unknownCount > 0 ? (
+          <div className="quick-fill">
+            <div className="quick-fill-text">
+              <SparkIcon size={16} />
+              <span>
+                Bez odpowiedzi: <strong>{unknownCount}</strong>. Uzupełnij jednym kliknięciem:
+              </span>
+            </div>
+            <div className="quick-fill-actions">
+              <button
+                type="button"
+                className="fill-btn fill-yes"
+                onClick={() => onFillUnknown("yes")}
+              >
+                <CheckIcon size={15} /> Niewiadome → mogę
+              </button>
+              <button
+                type="button"
+                className="fill-btn fill-no"
+                onClick={() => onFillUnknown("no")}
+              >
+                <CrossIcon size={15} /> Niewiadome → nie mogę
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="quick-fill quick-fill-done">
+            <div className="quick-fill-text">
+              <CheckIcon size={16} />
+              <span>Wszystkie sloty mają już Twoją odpowiedź.</span>
+            </div>
+          </div>
+        )
+      ) : null}
 
       <div className="days-grid">
         {dates.map((date) => (

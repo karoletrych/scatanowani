@@ -5,6 +5,7 @@ import type {
   RoomData,
   SlotStat,
   Slot,
+  Verdict,
 } from "../types";
 import { fromMinutes, toMinutes, weekdayOf } from "./dates";
 
@@ -303,4 +304,27 @@ export function withSlot(
     slots[key] = verdict;
   }
   return { ...answers, slots };
+}
+
+export function fillUnknown(
+  answers: ParticipantAnswers,
+  config: RoomConfig,
+  dates: string[],
+  verdict: Verdict,
+): { answers: ParticipantAnswers; changedKeys: string[] } {
+  const slots = { ...answers.slots };
+  const changedKeys: string[] = [];
+
+  for (const date of dates) {
+    for (const time of daySlotTimes(config)) {
+      if (!isSlotOpen(config, date, time)) continue;
+      const key = slotKey(date, time);
+      if (slots[key]) continue;
+      if (resolveAnswer(answers, { date, time }) !== "unknown") continue;
+      slots[key] = verdict;
+      changedKeys.push(key);
+    }
+  }
+
+  return { answers: { ...answers, slots }, changedKeys };
 }

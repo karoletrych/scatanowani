@@ -6,8 +6,9 @@ import { MeepleIcon } from "./components/Icons";
 import { Onboarding } from "./components/Onboarding";
 import { RulesDrawer } from "./components/RulesDrawer";
 import { SummaryView } from "./components/SummaryView";
-import { Toast } from "./components/Toast";
+import { Toast, type ToastAction } from "./components/Toast";
 import {
+  fillUnknown,
   progressFor,
   resolveAnswer,
   withDayCleared,
@@ -17,9 +18,16 @@ import {
 import { isoRange, slugifyName, todayISO } from "./lib/dates";
 import { EMPTY_ANSWERS } from "./lib/model";
 import { store, useRoom } from "./lib/store";
+import { slotsLabel } from "./lib/ui";
 import type { ParticipantAnswers, RoomConfig, Verdict } from "./types";
 
 const NAME_KEY = "scatanowani:name";
+
+interface ToastState {
+  message: string;
+  tone: "default" | "error";
+  action?: ToastAction;
+}
 
 function readStoredName(): string {
   try {
@@ -56,11 +64,14 @@ export default function App() {
     return requested === "summary" || requested === "host" ? requested : "calendar";
   });
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; tone: "default" | "error" } | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
-  const showToast = useCallback((message: string, tone: "default" | "error" = "default") => {
-    setToast({ message, tone });
-  }, []);
+  const showToast = useCallback(
+    (message: string, tone: "default" | "error" = "default", action?: ToastAction) => {
+      setToast({ message, tone, action });
+    },
+    [],
+  );
   const hideToast = useCallback(() => setToast(null), []);
 
   const myId = name ? slugifyName(name) : "";
@@ -146,6 +157,39 @@ export default function App() {
     [commitAnswers],
   );
 
+  const handleFillUnknown = useCallback(
+    (verdict: Verdict) => {
+      if (!room) return;
+      const before = answersRef.current;
+      const { answers: next, changedKeys } = fillUnknown(before, room.config, dates, verdict);
+      if (changedKeys.length === 0) {
+        showToast("Nie ma już niewiadomych do uzupełnienia.");
+        return;
+      }
+
+      commitAnswers(() => next);
+      const label = verdict === "yes" ? "mogę" : "nie mogę";
+      showToast(
+        `Uzupełniono ${slotsLabel(changedKeys.length)} jako „${label}”.`,
+        "default",
+        {
+          label: "Cofnij",
+          onClick: () => {
+            commitAnswers((current) => {
+              const slots = { ...current.slots };
+              for (const key of changedKeys) {
+                if (slots[key] === verdict) delete slots[key];
+              }
+              return { ...current, slots };
+            });
+            showToast("Cofnięto uzupełnianie.");
+          },
+        },
+      );
+    },
+    [room, dates, commitAnswers, showToast],
+  );
+
   const handleSaveConfig = useCallback(async (config: RoomConfig) => {
     await store.saveConfig(config);
   }, []);
@@ -174,7 +218,15 @@ export default function App() {
           status={status}
           onSubmit={handleIdentity}
         />
-        {toast ? <Toast message={toast.message} tone={toast.tone} onClose={hideToast} /> : null}
+        {toast ? (
+          <Toast
+            message={toast.message}
+            tone={toast.tone}
+            action={toast.action}
+            duration={toast.action ? 7000 : 3600}
+            onClose={hideToast}
+          />
+        ) : null}
       </div>
     );
   }
@@ -209,6 +261,7 @@ export default function App() {
             onWholeDay={handleWholeDay}
             onClearDay={handleClearDay}
             onOpenRules={() => setRulesOpen(true)}
+            onFillUnknown={handleFillUnknown}
             myProgress={myProgress}
           />
         ) : null}
@@ -246,7 +299,15 @@ export default function App() {
         onToast={showToast}
       />
 
-      {toast ? <Toast message={toast.message} tone={toast.tone} onClose={hideToast} /> : null}
+      {toast ? (
+        <Toast
+          message={toast.message}
+          tone={toast.tone}
+          action={toast.action}
+          duration={toast.action ? 7000 : 3600}
+          onClose={hideToast}
+        />
+      ) : null}
     </div>
   );
 }

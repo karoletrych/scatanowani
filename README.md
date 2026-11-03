@@ -18,6 +18,8 @@ zaznacza kiedy może, a aplikacja pokazuje najlepsze terminy na najbliższe dwa 
 
 - **14 dni do przodu** w slotach co 30 minut, domyślnie 17:00–22:00 (gospodarz zmienia).
 - **Trzy stany**: nie wiem (domyślnie) → mogę → nie mogę. Kliknięcie kafelka przełącza.
+- **Masowe wypełnianie**: jednym kliknięciem oznacz wszystkie pozostałe niewiadome jako
+  „mogę” albo „nie mogę” — z cofnięciem i bez ruszania jawnych odpowiedzi.
 - **Reguły cykliczne**: np. „w każdy czwartek do 19:00 nie mogę”, „w każdą środę od 19:20 nie mogę”.
 - **Jednorazowe wyjątki**: konkretna data i godziny.
 - **Szybkie „cały dzień”**: jednym kliknięciem mogę / nie mogę, plus czyszczenie dnia.

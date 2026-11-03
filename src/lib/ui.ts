@@ -39,6 +39,16 @@ export function peopleLabel(count: number): string {
   return `${count} osób`;
 }
 
+export function slotsLabel(count: number): string {
+  if (count === 1) return "1 slot";
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return `${count} sloty`;
+  }
+  return `${count} slotów`;
+}
+
 export function slotRangeLabel(time: string, minutes: number): string {
   const [hours, mins] = time.split(":").map(Number);
   const total = (hours ?? 0) * 60 + (mins ?? 0) + minutes;
