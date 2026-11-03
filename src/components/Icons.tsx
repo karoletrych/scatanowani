@@ -201,6 +201,15 @@ export function DownloadIcon({ size = 18, ...rest }: IconProps) {
   );
 }
 
+export function CopyIcon({ size = 18, ...rest }: IconProps) {
+  return (
+    <Base size={size} {...rest}>
+      <rect x="8.5" y="8.5" width="12" height="12" rx="2.4" />
+      <path d="M15.5 8.5V6a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.5" />
+    </Base>
+  );
+}
+
 export function ArrowIcon({ size = 18, ...rest }: IconProps) {
   return (
     <Base size={size} {...rest} strokeWidth={2.1}>

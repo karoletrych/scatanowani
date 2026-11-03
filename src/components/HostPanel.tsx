@@ -12,8 +12,8 @@ import { avatarColor, peopleLabel } from "../lib/ui";
 import {
   CheckIcon,
   ClockIcon,
+  CopyIcon,
   CrownIcon,
-  DownloadIcon,
   InfoIcon,
   PlusIcon,
   RefreshIcon,
@@ -139,9 +139,8 @@ export function HostPanel({
     }
   };
 
-  const downloadBackup = () => {
+  const buildBackup = () => {
     const now = new Date();
-    const stamp = now.toISOString().replace(/[:.]/g, "-").slice(0, 19);
     const participantsCount = Object.keys(room.participants).length;
     const answersCount = Object.keys(room.answers).length;
     const payload = {
@@ -159,18 +158,40 @@ export function HostPanel({
       participants: room.participants,
       answers: room.answers,
     };
-    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `scatanowani-backup-${stamp}.json`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    onToast("Kopia zapasowa pobrana na dysk.");
+    return { json: `${JSON.stringify(payload, null, 2)}\n` };
+  };
+
+  const legacyCopy = (text: string): boolean => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-1000px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
+  };
+
+  const copyBackup = async () => {
+    const { json } = buildBackup();
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(json);
+      } else if (!legacyCopy(json)) {
+        throw new Error("Clipboard unavailable");
+      }
+      onToast("Kopia zapasowa skopiowana do schowka.");
+    } catch (copyError) {
+      console.error(copyError);
+      if (legacyCopy(json)) {
+        onToast("Kopia zapasowa skopiowana do schowka.");
+        return;
+      }
+      onToast("Nie udało się skopiować do schowka. Spróbuj ponownie.", "error");
+    }
   };
 
   return (
@@ -421,17 +442,17 @@ export function HostPanel({
       <section className="card host-section">
         <header className="card-head">
           <h2>
-            <DownloadIcon size={18} /> Kopia zapasowa
+            <CopyIcon size={18} /> Kopia zapasowa
           </h2>
-          <span className="card-note">plik JSON</span>
+          <span className="card-note">do schowka</span>
         </header>
         <p className="card-note">
-          Pobiera całą tablicę: ustawienia gospodarza, osoby i odpowiedzi. Trzymaj plik poza
-          GitHubem — zawiera imiona i dyspozycyjność.
+          Kopiuje całą tablicę: ustawienia gospodarza, osoby i odpowiedzi, jako JSON. Wklej do
+          notatki lub pliku — zawiera imiona i dyspozycyjność, więc nie publikuj tego.
         </p>
         <div className="backup-actions">
-          <button type="button" className="btn btn-secondary" onClick={downloadBackup}>
-            <DownloadIcon size={16} /> Pobierz kopię (JSON)
+          <button type="button" className="btn btn-secondary" onClick={copyBackup}>
+            <CopyIcon size={16} /> Kopiuj JSON do schowka
           </button>
         </div>
       </section>
