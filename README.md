@@ -24,6 +24,8 @@ zaznacza kiedy może, a aplikacja pokazuje najlepsze terminy na najbliższe dwa 
 - **Jednorazowe wyjątki**: konkretna data i godziny.
 - **Szybkie „cały dzień”**: jednym kliknięciem mogę / nie mogę, plus czyszczenie dnia.
 - **Okna gospodarza**: poza nimi sloty są zablokowane i nie liczą się do podsumowań.
+- **Ciągłe zakresy**: najlepsze terminy łączą sąsiednie sloty w jeden przedział
+  (np. 18:00–20:00), zamiast wyliczać półgodziny osobno.
 - **Kopia zapasowa**: panel gospodarza kopiuje całą tablicę (ustawienia, osoby, odpowiedzi)
   do schowka jako JSON.
 - **Podsumowanie**: ranking najlepszych terminów, mapa ciepła i kto ile wypełnił.

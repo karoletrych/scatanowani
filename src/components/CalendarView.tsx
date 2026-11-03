@@ -1,6 +1,6 @@
 import type { ParticipantAnswers, RoomData, Verdict } from "../types";
 import {
-  bestForDay,
+  bestWindowForDay,
   dayHasAnyAnswer,
   dayHasData,
   dayOpenLabel,
@@ -54,7 +54,7 @@ function DayCard({
   const config = room.config;
   const times = daySlotTimes(config);
   const isOpen = times.some((time) => isSlotOpen(config, date, time));
-  const best = bestForDay(room, date);
+  const best = bestWindowForDay(room, date);
   const hasData = dayHasData(myAnswers, date);
   const relative = relativeDayLabel(date);
   const place = placeForDate(config, date);
@@ -73,9 +73,9 @@ function DayCard({
               <LockIcon size={13} /> zamknięte
             </span>
           ) : best ? (
-            <span className="pill pill-yes" title="Najlepszy slot tego dnia">
+            <span className="pill pill-yes" title="Najlepszy ciągły zakres tego dnia">
               <UsersIcon size={13} />
-              {best.stat.yes}/{best.stat.total} · {best.time}
+              {best.stat.yes}/{best.stat.total} · {best.time}–{best.to}
             </span>
           ) : (
             <span className="pill pill-muted">

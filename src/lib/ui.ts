@@ -49,6 +49,15 @@ export function slotsLabel(count: number): string {
   return `${count} slotów`;
 }
 
+export function durationLabel(minutes: number): string {
+  const safe = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(safe / 60);
+  const rest = safe % 60;
+  if (hours > 0 && rest > 0) return `${hours} godz. ${rest} min`;
+  if (hours > 0) return `${hours} godz.`;
+  return `${rest} min`;
+}
+
 export function slotRangeLabel(time: string, minutes: number): string {
   const [hours, mins] = time.split(":").map(Number);
   const total = (hours ?? 0) * 60 + (mins ?? 0) + minutes;

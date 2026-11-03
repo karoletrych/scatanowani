@@ -146,26 +146,92 @@ export function statForSlot(room: RoomData, slot: Slot): SlotStat {
   return stat;
 }
 
-export interface DayBest {
-  time: string;
+export interface AvailabilityWindow extends Slot {
+  to: string;
+  slotCount: number;
   stat: SlotStat;
 }
 
-export function bestForDay(room: RoomData, date: string): DayBest | null {
-  let best: DayBest | null = null;
+function windowsForDate(room: RoomData, date: string): AvailabilityWindow[] {
+  const ids = Object.keys(room.participants).sort();
+  const step = Math.max(15, room.config.slotMinutes);
+  const windows: AvailabilityWindow[] = [];
+  let current: AvailabilityWindow | null = null;
+  let currentSignature = "";
+
   for (const time of daySlotTimes(room.config)) {
-    if (!isSlotOpen(room.config, date, time)) continue;
-    const stat = statForSlot(room, { date, time });
-    if (stat.yes === 0) continue;
-    if (
-      !best ||
-      stat.yes > best.stat.yes ||
-      (stat.yes === best.stat.yes && stat.no < best.stat.no)
-    ) {
-      best = { time, stat };
+    if (!isSlotOpen(room.config, date, time)) {
+      if (current) {
+        windows.push(current);
+        current = null;
+        currentSignature = "";
+      }
+      continue;
     }
+
+    const signature = ids
+      .filter((id) => resolveAnswer(room.answers[id], { date, time }) === "yes")
+      .join("|");
+
+    if (current && signature === currentSignature) {
+      current.slotCount += 1;
+      current.to = fromMinutes(toMinutes(time) + step);
+      continue;
+    }
+
+    if (current) windows.push(current);
+    current = {
+      date,
+      time,
+      to: fromMinutes(toMinutes(time) + step),
+      slotCount: 1,
+      stat: statForSlot(room, { date, time }),
+    };
+    currentSignature = signature;
   }
-  return best;
+
+  if (current) windows.push(current);
+  return windows;
+}
+
+function sortWindows(a: AvailabilityWindow, b: AvailabilityWindow): number {
+  return (
+    b.stat.yes - a.stat.yes ||
+    b.slotCount - a.slotCount ||
+    a.stat.no - b.stat.no ||
+    a.date.localeCompare(b.date) ||
+    a.time.localeCompare(b.time)
+  );
+}
+
+export function bestWindowForDay(room: RoomData, date: string): AvailabilityWindow | null {
+  return (
+    windowsForDate(room, date)
+      .filter((window) => window.stat.yes > 0)
+      .sort(sortWindows)[0] ?? null
+  );
+}
+
+export function bestWindows(
+  room: RoomData,
+  dates: string[],
+  limit = 6,
+): AvailabilityWindow[] {
+  const windows = dates
+    .flatMap((date) => windowsForDate(room, date))
+    .filter((window) => window.stat.yes >= (window.stat.total >= 4 ? 2 : 1))
+    .sort(sortWindows);
+
+  const perDay = new Map<string, number>();
+  const picked: AvailabilityWindow[] = [];
+  for (const window of windows) {
+    const used = perDay.get(window.date) ?? 0;
+    if (used >= 2) continue;
+    picked.push(window);
+    perDay.set(window.date, used + 1);
+    if (picked.length >= limit) break;
+  }
+  return picked;
 }
 
 export function dayHasAnyAnswer(room: RoomData, date: string): boolean {
@@ -176,37 +242,6 @@ export function dayHasAnyAnswer(room: RoomData, date: string): boolean {
     }
   }
   return false;
-}
-
-export interface RankedSlot extends Slot {
-  stat: SlotStat;
-}
-
-export function topSlots(room: RoomData, dates: string[], limit = 6): RankedSlot[] {
-  const slots = openSlots(room.config, dates)
-    .map((slot) => ({ ...slot, stat: statForSlot(room, slot) }))
-    .filter((slot) => slot.stat.yes > 0)
-    .filter((slot) => slot.stat.yes >= (slot.stat.total >= 4 ? 2 : 1));
-
-  slots.sort((a, b) => {
-    if (b.stat.yes !== a.stat.yes) return b.stat.yes - a.stat.yes;
-    if (a.stat.no !== b.stat.no) return a.stat.no - b.stat.no;
-    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-    return a.time < b.time ? -1 : 1;
-  });
-
-  // Nie pokazujemy pięciu slotów z rzędu z jednego wieczoru — min. 90 minut odstępu.
-  const picked: RankedSlot[] = [];
-  for (const slot of slots) {
-    if (picked.length >= limit) break;
-    const tooClose = picked.some(
-      (other) =>
-        other.date === slot.date &&
-        Math.abs(toMinutes(other.time) - toMinutes(slot.time)) < 90,
-    );
-    if (!tooClose) picked.push(slot);
-  }
-  return picked;
 }
 
 export interface AnswerCounts {

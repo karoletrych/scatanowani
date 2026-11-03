@@ -1,16 +1,24 @@
 import { Fragment, useMemo, useState, type ReactNode } from "react";
-import type { RoomData, Slot, SlotStat } from "../types";
+import type { RoomData, SlotStat } from "../types";
 import {
+  bestWindows,
   countsFor,
   daySlotTimes,
   isDateOpen,
   isSlotOpen,
   progressFor,
   statForSlot,
-  topSlots,
 } from "../lib/availability";
-import { formatDayLong, formatDayShort, formatMonthDay, initials, weekdayShort } from "../lib/dates";
-import { avatarColor, peopleLabel, slotRangeLabel } from "../lib/ui";
+import {
+  formatDayLong,
+  formatDayShort,
+  formatMonthDay,
+  fromMinutes,
+  initials,
+  toMinutes,
+  weekdayShort,
+} from "../lib/dates";
+import { avatarColor, durationLabel, peopleLabel } from "../lib/ui";
 import { CheckIcon, CrossIcon, QuestionIcon, SparkIcon, UsersIcon } from "./Icons";
 import { Modal } from "./Modal";
 
@@ -77,8 +85,8 @@ function PeopleGroup({
 }
 
 export function SummaryView({ room, dates, myId }: { room: RoomData; dates: string[]; myId: string }) {
-  const [selected, setSelected] = useState<Slot | null>(null);
-  const best = useMemo(() => topSlots(room, dates, 6), [room, dates]);
+  const [selected, setSelected] = useState<{ date: string; from: string; to: string } | null>(null);
+  const best = useMemo(() => bestWindows(room, dates, 6), [room, dates]);
   const times = daySlotTimes(room.config);
   const participants = Object.entries(room.participants)
     .map(([id, participant]) => {
@@ -92,7 +100,9 @@ export function SummaryView({ room, dates, myId }: { room: RoomData; dates: stri
     })
     .sort((a, b) => b.progress.answered - a.progress.answered || a.name.localeCompare(b.name, "pl"));
 
-  const selectedStat: SlotStat | null = selected ? statForSlot(room, selected) : null;
+  const selectedStat: SlotStat | null = selected
+    ? statForSlot(room, { date: selected.date, time: selected.from })
+    : null;
 
   return (
     <section className="view">
@@ -136,16 +146,21 @@ export function SummaryView({ room, dates, myId }: { room: RoomData; dates: stri
                       <button
                         type="button"
                         className="best-row"
-                        onClick={() => setSelected({ date: entry.date, time: entry.time })}
+                        onClick={() =>
+                          setSelected({ date: entry.date, from: entry.time, to: entry.to })
+                        }
                       >
                         <span className="best-date">
                           <strong>{weekdayShort(entry.date)}</strong>
                           <span>{formatMonthDay(entry.date)}</span>
                         </span>
                         <span className="best-time">
-                          <strong>{slotRangeLabel(entry.time, room.config.slotMinutes)}</strong>
+                          <strong>
+                            {entry.time}–{entry.to}
+                          </strong>
                           <small>
-                            {entry.stat.yes}/{entry.stat.total} · {peopleLabel(entry.stat.yes)}
+                            {entry.stat.yes}/{entry.stat.total} · {peopleLabel(entry.stat.yes)} ·{" "}
+                            {durationLabel(entry.slotCount * room.config.slotMinutes)}
                           </small>
                         </span>
                         <span className="best-people">
@@ -161,8 +176,8 @@ export function SummaryView({ room, dates, myId }: { room: RoomData; dates: stri
                 })}
               </ul>
               <p className="best-foot">
-                Najlepsze sloty, w których może co najmniej 2 osoby. Pełny obraz — w mapie
-                poniżej.
+                Zakresy, w których przez cały czas może ta sama grupa (min. 2 osoby). Pełna
+                mapa poniżej.
               </p>
             </>
           )}
@@ -256,7 +271,13 @@ export function SummaryView({ room, dates, myId }: { room: RoomData; dates: stri
                         type="button"
                         className={`heat-cell ${stat.total > 0 && stat.yes === stat.total ? "is-full" : ""}`}
                         style={{ background: heatColor(ratio) }}
-                        onClick={() => setSelected({ date, time })}
+                        onClick={() =>
+                          setSelected({
+                            date,
+                            from: time,
+                            to: fromMinutes(toMinutes(time) + room.config.slotMinutes),
+                          })
+                        }
                         aria-label={`${formatDayLong(date)} ${time}: ${stat.yes} z ${stat.total} może`}
                         title={`${formatDayLong(date)} ${time} — ${stat.yes}/${stat.total} może`}
                       />
@@ -271,10 +292,9 @@ export function SummaryView({ room, dates, myId }: { room: RoomData; dates: stri
 
       {selected && selectedStat ? (
         <Modal
-          title={`${formatDayLong(selected.date)}, ${selected.time}`}
-          subtitle={`${selectedStat.yes} z ${selectedStat.total} może · slot ${slotRangeLabel(
-            selected.time,
-            room.config.slotMinutes,
+          title={`${formatDayLong(selected.date)}, ${selected.from}–${selected.to}`}
+          subtitle={`${selectedStat.yes} z ${selectedStat.total} może · ${durationLabel(
+            toMinutes(selected.to) - toMinutes(selected.from),
           )}`}
           onClose={() => setSelected(null)}
         >
