@@ -3,9 +3,16 @@
 Wspólny kalendarz dostępności dla grupy **sCATANowani**. Zamiast przekopywać czat, każdy
 zaznacza kiedy może, a aplikacja pokazuje najlepsze terminy na najbliższe dwa tygodnie.
 
-**Demo:** https://karoletrych.github.io/scatanowani/
+**Aplikacja:** https://karoletrych.github.io/scatanowani/
 
 ![Podgląd kalendarza](docs/preview.jpg)
+
+## Jak zacząć
+
+1. Wejdź na link i podaj imię — bez konta i hasła.
+2. Gospodarz w zakładce **Gospodarz** ustawia okna (np. 17:00–22:00) i ewentualne wyjątki.
+3. Każdy klika swoje sloty albo dodaje reguły w **Moje reguły**.
+4. W zakładce **Wszyscy** widać najlepsze terminy i mapę dostępności.
 
 ## Co potrafi
 
