@@ -57,15 +57,6 @@ Podgląd bez chmury (dane tylko w przeglądarce): `http://localhost:5173/?local=
 
 Szybkie wejście jako osoba: `?name=Karol`, a widok: `?tab=summary` lub `?tab=host`.
 
-### Dane demo (opcjonalnie)
-
-```bash
-node scripts/demo-data.mjs seed    # wypełnia bazę przykładowymi osobami
-node scripts/demo-data.mjs clear   # usuwa osoby i odpowiedzi
-```
-
-Skrypt pisze do produkcyjnej bazy — używaj tylko do podglądu.
-
 ## Deploy
 
 Push na `main` uruchamia workflow `.github/workflows/deploy.yml`, który buduje aplikację
