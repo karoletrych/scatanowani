@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Aplikacja jest celowo bez logowania: kto ma link, ten może czytać i pisać.
+    // Nie trzymamy tu nic wrażliwego — tylko imiona i dyspozycyjność.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

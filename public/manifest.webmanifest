@@ -1,0 +1,19 @@
+{
+  "name": "sCATANowani — dostępność na planszówki",
+  "short_name": "sCATANowani",
+  "description": "Wspólny kalendarz dostępności na planszówki grupy sCATANowani.",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4e7ca",
+  "theme_color": "#f4e7ca",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
