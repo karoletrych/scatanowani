@@ -13,6 +13,7 @@ import {
   CheckIcon,
   ClockIcon,
   CrownIcon,
+  DownloadIcon,
   InfoIcon,
   PlusIcon,
   RefreshIcon,
@@ -136,6 +137,40 @@ export function HostPanel({
     } finally {
       setSaving(false);
     }
+  };
+
+  const downloadBackup = () => {
+    const now = new Date();
+    const stamp = now.toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const participantsCount = Object.keys(room.participants).length;
+    const answersCount = Object.keys(room.answers).length;
+    const payload = {
+      schemaVersion: 1,
+      exportedAt: now.toISOString(),
+      project: "scatanowani",
+      database: "default",
+      counts: {
+        participants: participantsCount,
+        answers: answersCount,
+        config: 1,
+        totalDocuments: participantsCount + answersCount + 1,
+      },
+      config: room.config,
+      participants: room.participants,
+      answers: room.answers,
+    };
+    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `scatanowani-backup-${stamp}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    onToast("Kopia zapasowa pobrana na dysk.");
   };
 
   return (
@@ -380,6 +415,24 @@ export function HostPanel({
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="card host-section">
+        <header className="card-head">
+          <h2>
+            <DownloadIcon size={18} /> Kopia zapasowa
+          </h2>
+          <span className="card-note">plik JSON</span>
+        </header>
+        <p className="card-note">
+          Pobiera całą tablicę: ustawienia gospodarza, osoby i odpowiedzi. Trzymaj plik poza
+          GitHubem — zawiera imiona i dyspozycyjność.
+        </p>
+        <div className="backup-actions">
+          <button type="button" className="btn btn-secondary" onClick={downloadBackup}>
+            <DownloadIcon size={16} /> Pobierz kopię (JSON)
+          </button>
         </div>
       </section>
 

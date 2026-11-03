@@ -2022,6 +2022,13 @@ h3 {
   gap: 6px;
 }
 
+.backup-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .host-people li {
   display: inline-flex;
   align-items: center;

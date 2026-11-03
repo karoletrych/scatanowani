@@ -24,6 +24,8 @@ zaznacza kiedy może, a aplikacja pokazuje najlepsze terminy na najbliższe dwa 
 - **Jednorazowe wyjątki**: konkretna data i godziny.
 - **Szybkie „cały dzień”**: jednym kliknięciem mogę / nie mogę, plus czyszczenie dnia.
 - **Okna gospodarza**: poza nimi sloty są zablokowane i nie liczą się do podsumowań.
+- **Kopia zapasowa**: panel gospodarza pobiera całą tablicę (ustawienia, osoby, odpowiedzi)
+  do pliku JSON.
 - **Podsumowanie**: ranking najlepszych terminów, mapa ciepła i kto ile wypełnił.
 - **Na żywo**: zmiany innych osób pojawiają się bez odświeżania (Firebase).
 - **Bez logowania**: podajesz imię i działa. Imię jest pamiętane w przeglądarce.

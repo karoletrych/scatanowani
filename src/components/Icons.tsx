@@ -191,6 +191,16 @@ export function RefreshIcon({ size = 18, ...rest }: IconProps) {
   );
 }
 
+export function DownloadIcon({ size = 18, ...rest }: IconProps) {
+  return (
+    <Base size={size} {...rest}>
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M4.5 20h15" />
+    </Base>
+  );
+}
+
 export function ArrowIcon({ size = 18, ...rest }: IconProps) {
   return (
     <Base size={size} {...rest} strokeWidth={2.1}>
